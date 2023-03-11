@@ -1,4 +1,6 @@
 import cv2
+import copy
+import itertools
 
 
 
@@ -57,6 +59,36 @@ def calc_bbox(landmarks):
     height = abs(min_y_pos - max_y_pos)
 
     return (min_x_pos, min_y_pos, width, height)
+
+
+
+def preprocess_landmarks(landmarks):
+    """
+    Converts and normalize hand landmarks coordinates for machine learning model
+
+    :param landmarks: list[list] - list of absolute coordinates pairs of hand landmarks
+    """
+    temp_landmarks = copy.deepcopy(landmarks)
+
+    # Convert to relative coordinates
+    # wrist landmark is at pos (0,0) and every other landmark is relative to it
+    base_x, base_y = 0, 0
+    for idx, point in enumerate(temp_landmarks):
+        if idx == 0:
+            base_x, base_y = point[0], point[1]
+
+        temp_landmarks[idx][0] = temp_landmarks[idx][0] - base_x
+        temp_landmarks[idx][1] = temp_landmarks[idx][1] - base_y
+
+    # Convert to 1-dimensional list
+    temp_landmarks = list(itertools.chain.from_iterable(temp_landmarks))
+
+    # Normalization
+    max_val = max(list(map(abs, temp_landmarks)))
+    normalize = lambda n: n / max_val
+    temp_landmarks = list(map(normalize, temp_landmarks))
+
+    return temp_landmarks
 
 
 
