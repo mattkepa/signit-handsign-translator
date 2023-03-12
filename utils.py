@@ -19,6 +19,8 @@ LM_CONN_THICKNESS = 2
 LM_POINT_RADIUS = 5
 BBOX_COLOR = COLORS['purple2']
 BBOX_THICKNESS = 2
+LABEL_COLOR = COLORS['purple']
+LABEL_TEXT_COLOR = COLORS['white']
 
 
 
@@ -159,5 +161,28 @@ def draw_bbox(img, bbox, corner_radius):
 
     cv2.ellipse(img, (bottom_left[0] + corner_radius, bottom_left[1] - corner_radius), (corner_radius, corner_radius), 90, 0, 90, BBOX_COLOR, BBOX_THICKNESS)
     cv2.ellipse(img, (bottom_right[0] - corner_radius, bottom_right[1] - corner_radius), (corner_radius, corner_radius), 0, 0, 90, BBOX_COLOR, BBOX_THICKNESS)
+
+    return img
+
+
+def draw_label(img, bbox, text):
+    """
+    Draws label for detected hand sign.
+    Returns edited frame
+
+    :param img: list - cv2 captured frame
+    :param bbox: tuple - calculated x and y of top-left corner and width and height of hand bounding box
+    :param text: str - label for detected hand sign
+    """
+    offset = 20
+    height = 60
+    width = bbox[2]
+    start_x = bbox[0] - offset - BBOX_THICKNESS // 2
+    start_y = bbox[1] - offset - height - BBOX_THICKNESS // 2
+    end_x = bbox[0] + width + offset + BBOX_THICKNESS // 2
+    end_y = bbox[1] - offset + BBOX_THICKNESS // 2
+
+    cv2.rectangle(img, (start_x, start_y), (end_x, end_y), LABEL_COLOR, -1)
+    cv2.putText(img, text, (bbox[0], bbox[1] - 2*offset), cv2.FONT_HERSHEY_SIMPLEX, 1, LABEL_TEXT_COLOR, 2, cv2.LINE_AA)
 
     return img

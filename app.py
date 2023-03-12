@@ -1,6 +1,8 @@
 import cv2
 import mediapipe as mp
+import csv
 import copy
+from model.handsign_classifier import HandSignClassifier
 from utils import *
 
 
@@ -13,6 +15,12 @@ def main():
     # Hand detection model configuration
     mp_hands = mp.solutions.hands
     hands = mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracking_confidence=0.5)
+
+    # Hand sign classifier configuration
+    classifier = HandSignClassifier()
+    with open('model/handsign_labels.csv', 'r', encoding='utf-8-sig') as f:  # read labels for classifier
+        handsign_labels = csv.reader(f)
+        handsign_labels = [row[0] for row in handsign_labels]
 
 
     while cap.isOpened():
@@ -40,8 +48,16 @@ def main():
                 landmarks = calc_landmarks_pos(img, hand_landmarks) # get absolute position hand landmarks coordinates
                 bbox = calc_bbox(landmarks) # calculate bounding box for hand
 
+                # Convert detected hand landmarks to relative and normalized coordinates
+                processed_landmarks = preprocess_landmarks(landmarks)
+
+                # Hand sign landmarks data classification
+                hand_sign_idx = classifier(processed_landmarks) # returns index of classified sign
+
                 # Draw information to ouput image
                 output = draw_bbox(output, bbox, 20)
+                if hand_sign_idx is not None:
+                    output = draw_label(output, bbox, handsign_labels[hand_sign_idx])
                 output = draw_landmarks(output, landmarks)
 
         # Display output
